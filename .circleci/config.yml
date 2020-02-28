@@ -1,0 +1,36 @@
+version: 2.1
+
+executors:
+  yarn_update_pr:
+    docker:
+      - image: dependabot/dependabot-core
+        environment:
+          PACKAGE_MANAGER: npm_and_yarn
+          PROJECT_PATH: risafj/node_image_processor
+
+jobs:
+  raise_yarn_update_pr:
+    executor: yarn_update_pr
+    steps:
+      - run:
+          name: Install dependencies
+          command: >
+            docker run -v "$(pwd):/home/dependabot/dependabot-script"
+            -w /home/dependabot/dependabot-script
+            dependabot/dependabot-core
+            bundle install -j 3 --path vendor --gemfile=Gemfile-dependabot
+      - run:
+          name: Execute Dependabot script
+          command: >
+            docker run -v "$(pwd):/home/dependabot/dependabot-script"
+            -w /home/dependabot/dependabot-script
+            dependabot/dependabot-core bundle exec ruby ./generic-update-script.rb
+
+workflows:
+  version: 2
+  yarn_update_pr:
+    triggers:
+      - schedule:
+          cron: "0,5,10,15,20,25,30,35,40,45,50,55 * * * *"
+    jobs:
+      - raise_yarn_update_pr
