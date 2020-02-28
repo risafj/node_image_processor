@@ -19,14 +19,14 @@ jobs:
       - run:
           name: Install dependencies
           command: >
-            docker run -v "$(pwd):/home/dependabot/dependabot-script"
+            docker run -v "/home/circleci/project:/home/dependabot/dependabot-script"
             -w /home/dependabot/dependabot-script
             dependabot/dependabot-core
             bundle install -j 3 --path vendor --gemfile=Gemfile-dependabot
       - run:
           name: Execute Dependabot script
           command: >
-            docker run -v "$(pwd):/home/dependabot/dependabot-script"
+            docker run -v "/home/circleci/project":/home/dependabot/dependabot-script"
             -w /home/dependabot/dependabot-script
             dependabot/dependabot-core bundle exec ruby ./generic-update-script.rb
 
