@@ -3,7 +3,7 @@ version: 2.1
 executors:
   yarn_update_pr:
     docker:
-      - image: dependabot/dependabot-core
+      - image: circleci/ruby:2.6.3-stretch-node-browsers
         environment:
           PACKAGE_MANAGER: npm_and_yarn
           PROJECT_PATH: risafj/node_image_processor
@@ -12,9 +12,10 @@ jobs:
   raise_yarn_update_pr:
     executor: yarn_update_pr
     steps:
+      - setup_remote_docker
       - run:
-          name: Install Docker client
-          command: apt install docker.io
+          name: Pull dependabot image
+          command: docker pull dependabot/dependabot-core
       - run:
           name: Install dependencies
           command: >
