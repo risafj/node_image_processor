@@ -12,6 +12,7 @@ jobs:
   raise_yarn_update_pr:
     executor: yarn_update_pr
     steps:
+      - checkout
       - setup_remote_docker
       - run:
           name: Pull dependabot image
