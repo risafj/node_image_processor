@@ -3,7 +3,7 @@ version: 2.1
 executors:
   yarn_update_pr:
     docker:
-      - image: circleci/ruby:2.6.3-stretch-node-browsers
+      - image: circleci/ruby:2.6.5-node-browsers
         environment:
           PACKAGE_MANAGER: npm_and_yarn
           PROJECT_PATH: risafj/node_image_processor
