@@ -15,22 +15,32 @@ jobs:
       - checkout
       - setup_remote_docker
       - run:
-          name: Pull dependabot image
-          command: docker pull dependabot/dependabot-core
+          name: Create dummy Docker container and copy necessary files
+          command: |
+            docker run -itd -v /home/dependabot/dependabot-script/ --name configs alpine:3.4
+            docker cp ./Gemfile-dependabot configs:/home/dependabot/dependabot-script/
+            docker cp ./generic-update-script.rb configs:/home/dependabot/dependabot-script/
       - run:
-          name: Install dependencies
-          command: >
-            docker run -v "/home/circleci/project:/home/dependabot/dependabot-script"
-            -w /home/dependabot/dependabot-script
-            dependabot/dependabot-core
-            bundle install -j 3 --path vendor --gemfile=Gemfile-dependabot
+          name: Copy files from dummy container to Dependabot container
+          command: |
+            docker run -itd --name dependabot-core --volumes-from configs dependabot/dependabot-core
       - run:
-          name: Execute Dependabot script
+          name: Bundle install inside Dependabot container
           command: >
-            docker run -v "/home/circleci/project":/home/dependabot/dependabot-script"
-            -w /home/dependabot/dependabot-script
-            dependabot/dependabot-core bundle exec ruby ./generic-update-script.rb
-
+            docker exec dependabot-core
+            "/bin/bash" "-c"
+            "cd /home/dependabot/dependabot-script && bundle install -j 3 --path vendor --gemfile=Gemfile-dependabot"
+      - run:
+          name: Execute yarn upgrade script
+          command: >
+            docker exec
+            -e GITHUB_ACCESS_TOKEN="${GITHUB_ACCESS_TOKEN}"
+            -e PROJECT_PATH="${PROJECT_PATH}"
+            -e PACKAGE_MANAGER="${PACKAGE_MANAGER}"
+            -e BUNDLE_GEMFILE=/home/dependabot/dependabot-script/Gemfile-dependabot
+            dependabot-core
+            "/bin/bash" "-c"
+            "cd /home/dependabot/dependabot-script && bundle exec ruby ./generic-update-script.rb"
 workflows:
   version: 2
   yarn_update_pr:
