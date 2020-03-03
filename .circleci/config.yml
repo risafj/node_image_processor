@@ -3,44 +3,26 @@ version: 2.1
 executors:
   yarn_update_pr:
     docker:
-      - image: circleci/ruby:2.6.5-node-browsers
+      - image: dependabot/dependabot-core
         environment:
           PACKAGE_MANAGER: npm_and_yarn
           PROJECT_PATH: risafj/node_image_processor
+          BUNDLE_GEMFILE: Gemfile-dependabot
 
 jobs:
   raise_yarn_update_pr:
     executor: yarn_update_pr
     steps:
       - checkout
-      - setup_remote_docker
-      - run:
-          name: Create dummy Docker container and copy necessary files
-          command: |
-            docker run -itd -v /home/dependabot/dependabot-script/ --name configs alpine:3.4
-            docker cp $(pwd)/Gemfile-dependabot configs:/home/dependabot/dependabot-script/
-            docker cp $(pwd)/generic-update-script.rb configs:/home/dependabot/dependabot-script/
-      - run:
-          name: Copy files from dummy container to Dependabot container
-          command: |
-            docker run -itd --name dependabot-core --volumes-from configs dependabot/dependabot-core
       - run:
           name: Bundle install inside Dependabot container
-          command: >
-            docker exec dependabot-core
-            "/bin/bash" "-c"
-            "cd /home/dependabot/dependabot-script && bundle install -j 3 --path vendor --gemfile=Gemfile-dependabot"
+          command:
+            bundle install -j 3 --path vendor --gemfile=Gemfile-dependabot
       - run:
           name: Execute yarn upgrade script
-          command: >
-            docker exec
-            -e GITHUB_ACCESS_TOKEN="${GITHUB_ACCESS_TOKEN}"
-            -e PROJECT_PATH="${PROJECT_PATH}"
-            -e PACKAGE_MANAGER="${PACKAGE_MANAGER}"
-            -e BUNDLE_GEMFILE=/home/dependabot/dependabot-script/Gemfile-dependabot
-            dependabot-core
-            "/bin/bash" "-c"
-            "cd /home/dependabot/dependabot-script && bundle exec ruby ./generic-update-script.rb"
+          command:
+            bundle exec ruby ./generic-update-script.rb
+
 workflows:
   version: 2
   yarn_update_pr:
