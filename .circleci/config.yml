@@ -18,8 +18,8 @@ jobs:
           name: Create dummy Docker container and copy necessary files
           command: |
             docker run -itd -v /home/dependabot/dependabot-script/ --name configs alpine:3.4
-            docker cp ./Gemfile-dependabot configs:/home/dependabot/dependabot-script/
-            docker cp ./generic-update-script.rb configs:/home/dependabot/dependabot-script/
+            docker cp $(pwd)/Gemfile-dependabot configs:/home/dependabot/dependabot-script/
+            docker cp $(pwd)/generic-update-script.rb configs:/home/dependabot/dependabot-script/
       - run:
           name: Copy files from dummy container to Dependabot container
           command: |
